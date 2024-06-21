@@ -1,0 +1,129 @@
+name: dns-service
+volumes:
+  etc-pihole:
+  etc-dnsmasq.d:
+  unbound:
+networks:
+  dns:
+    driver: bridge
+    ipam:
+        config:
+        - subnet: 172.18.0.0/16
+services:
+  pihole:
+    container_name: pihole
+    hostname: pihole.home
+    image: pihole/pihole:latest
+    networks:
+      dns:
+        ipv4_address: 172.18.0.7
+        mac_address: 02:42:0f:4b:32:26
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 85:80/tcp
+    environment:
+      TZ: Europe/Paris
+      WEBPASSWORD: password
+      PIHOLE_DNS_: 172.18.0.8#5053
+      FTLCONF_LOCAL_IPV4: 172.18.0.7
+      DNSSEC: true
+      IPv6: false
+      WEBUIBOXEDLAYOUT: boxed
+      WEBTHEME: dark
+      INTERFACE: eth0
+      DNSMASQ_LISTENING: single
+      FTLCONF_SOCKET_LISTENING: localonly
+      FTLCONF_MOZILLA_CANARY: true
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - etc-pihole:/etc/pihole
+      - etc-dnsmasq.d:/etc/dnsmasq.d
+    restart: unless-stopped
+  unbound:
+    container_name: unbound
+    hostname: unbound.home
+    image: mvance/unbound:latest
+    networks:
+      dns:
+        ipv4_address: 172.18.0.8
+        mac_address: 02:42:AC:17:00:08
+    volumes:
+      - unbound:/opt/unbound/
+    ports:
+      - 5053:53/tcp
+      - 5053:53/udp
+    command: >
+      sh -c 'touch /var/log/unbound.log &&
+      chown _unbound:_unbound /var/log/unbound.log &&
+      echo "server:
+        cache-max-ttl: 86400
+        cache-min-ttl: 300
+        directory: '/opt/unbound/etc/unbound'
+        ede: yes
+        ede-serve-expired: yes
+        edns-buffer-size: 1232
+        interface: 172.18.0.8@5053
+        rrset-roundrobin: yes
+        username: '_unbound'
+        log-local-actions: no
+        log-queries: no
+        log-replies: no
+        log-servfail: no
+        logfile: /var/log/unbound.log
+        verbosity: 0
+        aggressive-nsec: yes
+        delay-close: 10000
+        do-daemonize: no
+        do-not-query-localhost: no
+        neg-cache-size: 4M
+        qname-minimisation: yes
+        access-control: 127.0.0.1/32 allow
+        access-control: 192.168.0.0/16 allow
+        access-control: 172.16.0.0/12 allow
+        access-control: 10.0.0.0/8 allow
+        auto-trust-anchor-file: 'var/root.key'
+        chroot: '/opt/unbound/etc/'
+        deny-any: yes
+        harden-algo-downgrade: yes
+        harden-unknown-additional: yes
+        harden-below-nxdomain: yes
+        harden-dnssec-stripped: yes
+        harden-glue: yes
+        harden-large-queries: yes
+        harden-referral-path: no
+        harden-short-bufsize: yes
+        hide-http-user-agent: no
+        hide-identity: yes
+        hide-version: yes
+        http-user-agent: 'DNS'
+        identity: 'DNS'
+        private-address: 10.0.0.0/8
+        private-address: 172.16.0.0/12
+        private-address: 192.168.0.0/16
+        private-address: 169.254.0.0/16
+        ratelimit: 1000
+        tls-cert-bundle: /etc/ssl/certs/ca-certificates.crt
+        unwanted-reply-threshold: 10000
+        use-caps-for-id: yes
+        val-clean-additional: yes
+        infra-cache-slabs: 32
+        incoming-num-tcp: 10
+        key-cache-slabs: 32
+        msg-cache-size: 2482357589
+        msg-cache-slabs: 32
+        num-queries-per-thread: 4096
+        num-threads: 23
+        outgoing-range: 8192
+        rrset-cache-size: 4964715178
+        rrset-cache-slabs: 32
+        minimal-responses: yes 
+        prefetch: no
+        prefetch-key: yes
+        serve-expired: no
+        sock-queue-timeout: 3" > /opt/unbound/etc/unbound/unbound.conf &&
+        /unbound.sh'
+    healthcheck:
+      test: [NONE]
+    restart: unless-stopped
