@@ -9,6 +9,7 @@ networks:
     ipam:
         config:
         - subnet: 172.18.0.0/16
+    enable_ipv6: false
 services:
   pihole:
     container_name: pihole
@@ -27,16 +28,18 @@ services:
       WEBPASSWORD: password
       PIHOLE_DNS_: 172.18.0.8#5053
       FTLCONF_LOCAL_IPV4: 172.18.0.7
+      FTLCONF_LOCAL_IPV6: ""
       DNSSEC: true
-      IPv6: false
+      IPv6: "false"
       WEBUIBOXEDLAYOUT: boxed
       WEBTHEME: dark
       INTERFACE: eth0
       DNSMASQ_LISTENING: single
       FTLCONF_SOCKET_LISTENING: localonly
       FTLCONF_MOZILLA_CANARY: true
-    cap_add:
-      - NET_ADMIN
+      FTLCONF_IGNORE_LOCALHOST: yes
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: 1
     volumes:
       - etc-pihole:/etc/pihole
       - etc-dnsmasq.d:/etc/dnsmasq.d

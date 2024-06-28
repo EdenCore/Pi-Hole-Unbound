@@ -1,5 +1,4 @@
 #!/bin/bash
-
 reserved=12582912
 availableMemory=$((1024 * $( (grep MemAvailable /proc/meminfo || grep MemTotal /proc/meminfo) | sed 's/[^0-9]//g' ) ))
 memoryLimit=$availableMemory
@@ -39,12 +38,16 @@ server:
     auto-trust-anchor-file: 'var/root.key'
     cache-max-ttl: 86400
     cache-min-ttl: 300
-    chroot: '/opt/unbound/etc/unbound'
+    chroot: '/opt/unbound/etc/unbound/'
     delay-close: 10000
     deny-any: yes
-    directory: '/opt/unbound/etc/unbound'
+    directory: '/opt/unbound/etc/unbound/'
     do-daemonize: no
-    do-not-query-localhost: no
+    do-ip4: yes
+    do-ip6: no
+    do-not-query-localhost: yes
+    do-tcp: yes
+    do-udp: yes
     ede-serve-expired: yes
     ede: yes
     edns-buffer-size: 1232
@@ -73,10 +76,10 @@ server:
     minimal-responses: yes 
     msg-cache-size: @MSG_CACHE_SIZE@
     msg-cache-slabs: @SLABS@
-    neg-cache-size: 4M
     num-queries-per-thread: 4096
     num-threads: @THREADS@
     outgoing-range: 8192
+    prefer-ip6: no
     prefetch-key: yes
     prefetch: no
     private-address: 10.0.0.0/8
@@ -91,7 +94,7 @@ server:
     serve-expired: no
     sock-queue-timeout: 3
     unwanted-reply-threshold: 10000
-    use-caps-for-id: yes
+    use-caps-for-id: no
     username: '_unbound'
     val-clean-additional: yes
     verbosity: 1
