@@ -15,6 +15,14 @@ services:
     container_name: pihole
     hostname: pihole.home
     image: pihole/pihole:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 200M
+        reservations:
+          cpus: '0.1'
+          memory: 100M
     networks:
       dns:
         ipv4_address: 172.18.0.7
@@ -47,7 +55,15 @@ services:
   unbound:
     container_name: unbound
     hostname: unbound.home
-    image: unbound:1.20
+    image: unbound:3.0
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 250M
+        reservations:
+          cpus: '0.1'
+          memory: 200M
     networks:
       dns:
         ipv4_address: 172.18.0.8
